@@ -11,7 +11,7 @@ PDF Chat Companion is a React.js-based web application that allows users to uplo
 
 ## Features
 
-* User Authentication UI (Login & Signup)
+
 * PDF Upload and Management
 * Interactive Chat Window to ask questions
 * Simulated AI responses for demo purposes

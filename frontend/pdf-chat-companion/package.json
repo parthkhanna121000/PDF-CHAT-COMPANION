@@ -10,11 +10,15 @@
   },
   "dependencies": {
     "axios": "^1.9.0",
+    "chart.js": "^4.5.1",
     "lucide-react": "^0.503.0",
-    "pdfjs-dist": "^5.1.91",
+    "pdfjs-dist": "^5.4.394",
     "react": "^19.0.0",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.5.3",
+    "react-dropzone": "^14.3.8",
+    "react-pdf": "^10.2.0",
+    "react-router-dom": "^7.9.5",
     "react-toastify": "^11.0.5",
     "tailwindcss": "^3.2.0"
   },

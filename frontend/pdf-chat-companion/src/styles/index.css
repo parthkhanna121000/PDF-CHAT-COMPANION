@@ -1,0 +1,9 @@
+/* src/styles/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  /* Change this line from font-inter to font-sans */
+  @apply font-sans antialiased;
+}

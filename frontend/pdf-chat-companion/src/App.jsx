@@ -1,66 +1,96 @@
-import React, { useState, useEffect } from "react";
-import "./App.css";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import ChatBox from "./components/ChatBox";
-import ThemeToggle from "./components/ThemeToggle";
-import PdfUploader from "./components/PdfUploader";
-1;
-function App() {
-  const [pdfText, setPdfText] = useState("");
-  const [chatHistory, setChatHistory] = useState([]);
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+// src/App.jsx
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
+import React, { useState } from "react";
+import Sidebar from "./components/layout/Sidebar";
+import Dashboard from "./features/dashboard/Dashboard";
+import Chat from "./features/chat/Chat";
+import Analytics from "./features/analytics/Analytics";
+import Login from "./features/auth/Login";
+import Signup from "./features/auth/Signup";
+import MyDocuments from "./components/pages/MyDocuments";
+import { DocumentProvider } from "./context/DocumentContext";
+
+// --- 1. IMPORT THE DOCUMENT VIEW PAGE ---
+import DocumentView from "./pages/DocumentView";
+
+export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authPage, setAuthPage] = useState("login");
+  const [activeTab, setActiveTab] = useState("Dashboard");
+
+  // --- 2. ADD STATE TO TRACK THE SELECTED DOCUMENT ---
+  const [selectedDocumentId, setSelectedDocumentId] = useState(null);
+
+  // --- 3. CREATE A WRAPPER FOR 'setActiveTab' ---
+  // This ensures that when you click a new sidebar tab,
+  // it clears any document you were viewing.
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+    setSelectedDocumentId(null); // Reset document view
   };
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+  const renderContent = () => {
+    switch (activeTab) {
+      case "Dashboard":
+        return <Dashboard />;
 
+      // --- 4. UPDATE "MY DOCUMENTS" LOGIC ---
+      case "My Documents":
+        if (selectedDocumentId) {
+          // If a document is selected, show the viewer
+          return (
+            <DocumentView
+              docId={selectedDocumentId}
+              onBack={() => setSelectedDocumentId(null)} // Pass a function to go back
+            />
+          );
+        } else {
+          // Otherwise, show the list
+          return (
+            <MyDocuments
+              onDocumentClick={(id) => setSelectedDocumentId(id)} // Pass a function to set the ID
+            />
+          );
+        }
+
+      case "Chat":
+        return <Chat />;
+      case "Analytics":
+        return <Analytics />;
+      default:
+        return <Dashboard />;
+    }
+  };
+
+  // --- AUTH LOGIC (No changes needed) ---
+  if (!isAuthenticated) {
+    if (authPage === "login") {
+      return (
+        <Login
+          onLoginSuccess={() => setIsAuthenticated(true)}
+          onSwitchToSignup={() => setAuthPage("signup")}
+        />
+      );
+    } else {
+      return (
+        <Signup
+          onSignupSuccess={() => setIsAuthenticated(true)}
+          onSwitchToLogin={() => setAuthPage("login")}
+        />
+      );
+    }
+  }
+
+  // --- MAIN APP RENDER ---
   return (
-    <div className="min-h-screen flex flex-col transition-all duration-500 bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="sticky top-0 z-50 flex justify-between items-center px-6 py-4 shadow-sm bg-white/80 dark:bg-gray-900/80 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center gap-3">
-          <h1 className="text-6xl font-bold text-gray-900 dark:text-white tracking-wide">
-            PDF Chat Companion
-          </h1>
+    <DocumentProvider>
+      <div className="font-sans bg-gradient-to-br from-purple-200 via-pink-200 to-blue-200 h-screen overflow-hidden">
+        <div className="flex h-full">
+          {/* 5. PASS THE NEW 'handleTabChange' FUNCTION */}
+          <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} />
+          <div className="flex-1 h-full overflow-y-auto">{renderContent()}</div>
         </div>
-        <ThemeToggle onClick={toggleTheme} />
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto p-4 flex flex-col gap-6 animate-fade-in">
-        <section>
-          <PdfUploader setPdfText={setPdfText} />
-        </section>
-        <section className="flex-1">
-          <ChatBox
-            pdfText={pdfText}
-            chatHistory={chatHistory}
-            setChatHistory={setChatHistory}
-          />
-        </section>
-      </main>
-
-      {/* Toast */}
-      <ToastContainer
-        position="bottom-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-      />
-    </div>
+      </div>
+    </DocumentProvider>
   );
 }
-
-export default App;

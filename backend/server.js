@@ -1,47 +1,62 @@
-// Inside server.js
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const authRoutes = require('./routes/authRoutes');
-const chatRoutes = require('./routes/chatRoutes');
-const pdfRoutes = require('./routes/pdfRoutes');
+// server.js
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
 
-// Load environment variables from .env file
-dotenv.config();
+// Routes
+const authRoutes = require("./routes/authRoutes");
+const chatRoutes = require("./routes/chatRoutes");
+const pdfRoutes = require("./routes/pdfRoutes");
 
 const app = express();
 
-// Middleware
-app.use(cors()); // Enable CORS for cross-origin requests
-app.use(express.json()); // Parse incoming JSON requests
+// ⭐ FIXED CORS — allow your frontend
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:3000"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
 
-// Static file serving for uploaded PDFs
-app.use('/uploads', express.static('uploads'));
+// ⭐ Body parsers
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+// ⭐ Serve static uploads
+app.use("/uploads", express.static("uploads"));
 
-// Use API routes
-app.use('/api/auth', authRoutes);  // For authentication (register, login)
-app.use('/api/chat', chatRoutes);  // For chat-related functionalities
-app.use('/api/pdf', pdfRoutes);    // For PDF upload and processing
+// ⭐ MongoDB connection
+mongoose
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err.message));
 
-// 404 Handler for unknown routes
+// ⭐ API routes
+app.use("/api/auth", authRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/pdf", pdfRoutes);
+
+// ⭐ 404 handler
 app.use((req, res) => {
-  res.status(404).json({ message: 'Not Found' });
+  res.status(404).json({ message: "Route Not Found" });
 });
 
-// General error handler for unexpected server errors
+// ⭐ Global error handler
 app.use((err, req, res, next) => {
-  console.error('Unexpected server error:', err.stack);
-  res.status(500).json({ message: 'Internal Server Error', error: err.message });
+  console.error("❌ Server Error:", err);
+  res.status(500).json({
+    message: "Internal Server Error",
+    error: err.message,
+  });
 });
 
-// Start the server on the specified port
+// ⭐ Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
